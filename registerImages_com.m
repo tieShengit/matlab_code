@@ -1,18 +1,18 @@
 function [MOVINGREG] = registerImages_com(MOVING,FIXED)
 
-% 获得有限值数据的线性索引
+% Get the linear indices of finite values
 finiteIdx = isfinite(FIXED(:));
 
-% 将NaN值替换为0
+% Replace NaN values with 0
 FIXED(isnan(FIXED)) = 0;
 
-% 将Inf值替换为1
+% Replace Inf values with 1
 FIXED(FIXED==Inf) = 1;
 
-%将-Inf值替换为0
+% Replace -Inf values with 0
 FIXED(FIXED==-Inf) = 0;
 
-%将输入数据归一化到[0,1]范围内。
+% Normalize the input data to the range [0,1]
 FIXEDmin = min(FIXED(:));
 FIXEDmax = max(FIXED(:));
 if isequal(FIXEDmax,FIXEDmin)
@@ -21,21 +21,21 @@ else
     FIXED(finiteIdx) = (FIXED(finiteIdx) - FIXEDmin) ./ (FIXEDmax - FIXEDmin);
 end
 
-% 将moving图像归一化
+% Normalize the moving image
 
-% 获得有限值数据的线性索引
+% Get the linear indices of finite values
 finiteIdx = isfinite(MOVING(:));
 
-% 将NaN值替换为0
+% Replace NaN values with 0
 MOVING(isnan(MOVING)) = 0;
 
-%将Inf值替换为1
+% Replace Inf values with 1
 MOVING(MOVING==Inf) = 1;
 
-%将-Inf值替换为0
+% Replace -Inf values with 0
 MOVING(MOVING==-Inf) = 0;
 
-%  归一化
+% Normalize
 MOVINGmin = min(MOVING(:));
 MOVINGmax = max(MOVING(:));
 if isequal(MOVINGmax,MOVINGmin)
@@ -44,12 +44,11 @@ else
     MOVING(finiteIdx) = (MOVING(finiteIdx) - MOVINGmin) ./ (MOVINGmax - MOVINGmin);
 end
 
-
-% 默认空间引用对象
+% Default spatial reference object
 fixedRefObj = imref2d(size(FIXED));
 movingRefObj = imref2d(size(MOVING));
 
-% 基于强度的配准
+% Intensity-based registration
 [optimizer, metric] = imregconfig('multimodal');
 metric.NumberOfSpatialSamples = 500;
 metric.NumberOfHistogramBins = 50;
@@ -59,7 +58,7 @@ optimizer.Epsilon = 1.50000e-06;
 optimizer.InitialRadius = 1.780e-03;
 optimizer.MaximumIterations = 150;
 
-% 质量中心对齐
+% Center of mass alignment
 [xFixed,yFixed] = meshgrid(1:size(FIXED,2),1:size(FIXED,1));
 [xMoving,yMoving] = meshgrid(1:size(MOVING,2),1:size(MOVING,1));
 sumFixedIntensity = sum(FIXED(:));
@@ -71,28 +70,27 @@ movingYCOM = (movingRefObj.PixelExtentInWorldY .* (sum(yMoving(:).*double(MOVING
 translationX = fixedXCOM - movingXCOM;
 translationY = fixedYCOM - movingYCOM;
 
-% 粗对齐
+% Rough alignment
 initTform = affine2d();
 initTform.T(3,1:2) = [translationX, translationY];
 
-% 应用高斯模糊
+% Apply Gaussian blur
 fixedInit = imgaussfilt(FIXED,0.885);
 movingInit = imgaussfilt(MOVING,0.885);
 
-% 转换为灰度图
+% Convert to grayscale
 movingInit = mat2gray(movingInit);
 fixedInit = mat2gray(fixedInit);
 
-%  应用变换
+% Apply transformation
 tform = imregtform(movingInit,movingRefObj,fixedInit,fixedRefObj,'affine',optimizer,metric,'PyramidLevels',3,'InitialTransformation',initTform);
 MOVINGREG.Transformation = tform;
 MOVINGREG.RegisteredImage = imwarp(MOVING, movingRefObj, tform, 'OutputView', fixedRefObj, 'SmoothEdges', true,'interp','nearest');
 
-% 非刚性配准
+% Non-rigid registration
 [MOVINGREG.DisplacementField,MOVINGREG.RegisteredImage] = imregdemons(MOVINGREG.RegisteredImage,FIXED,120,'AccumulatedFieldSmoothing',1.2,'PyramidLevels',3);
 
-%存储空间参考对象
+% Store spatial reference object
 MOVINGREG.SpatialRefObj = fixedRefObj;
 
 end
-

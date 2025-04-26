@@ -1,19 +1,19 @@
 clear all;
 clc;
 
-% 使用已经获取的参数对每个物质每个时间点的所有MID进行配准
-% 'Malic', 'Fumaric', 'SUC' 
+% Register all MID for each substance and each time point with the obtained parameters
+% 'Malic', 'Fumaric', 'SUC'
 
-% 修改样本序号
+% Modify sample number
 sampler_num = 'first';
 params_floder = ['./2025_data_cal/0406/params/' sampler_num '/'];
 
-% 修改文件路径
+% Modify file paths
 source_floder = 'C:\Users\Administrator\Desktop\2025计算\20250406/20250417/';
 
 save_path_folder = ['./2025_data_cal/0406/data/' sampler_num '/'];
 
-% 加载fixed图像的轮廓闭包
+% Load the boundary closure of the fixed image
 load([params_floder 'fixed_boundray.mat']);
 mets_name = {'Malic','Fumaric'}; 
 
@@ -24,7 +24,7 @@ befor_data_save_fold = ['./2025_data_cal/0406/data/' sampler_num '/before/'];
 
 if ~exist(befor_data_save_fold,'dir')
     mkdir(befor_data_save_fold)
-    disp('创建before文件夹')
+    disp('Creating before folder')
 else
     disp('----')
 end
@@ -51,19 +51,19 @@ for m=1:length(mets_name)
         before_file_save_path =[before_save_path met_name '_t' num2str(t) '_before.xlsx'];
         params_name = [para_name{m} '_t' num2str(t) '.mat'];
 
-        %  加载对应参数
+        % Load corresponding parameters
         load([params_floder params_name])
         current_t = time_points{t};
         current_folder = [source_floder current_t '/'  met_name '/'];
 
-        % 找到对应文件
+        % Find the corresponding files
         for mid=1:length(mids)
             sheet_name = mids{mid};
             f_str = ['*m' num2str(mid-1) '*N_sum.xlsx'];
             files_name_list = dir(fullfile(current_folder, f_str));
             files_name = {files_name_list.name};
 
-            % 存在该文件
+            % The file exists
             if ~isempty(files_name)
                 full_path = fullfile(current_folder, files_name{1});
                 movimg_matrix = readmatrix(full_path);
@@ -72,20 +72,20 @@ for m=1:length(mets_name)
                 
                 fixed_matrix = maskMatrixWithPolygon(fixed_matrix,fix_img_boundary);
 
-                % 将两张图像填充成同样分辨率
+                % Resize both images to the same resolution
                 [fixed_matrix,movimg_matrix] = convert2same(fixed_matrix, movimg_matrix);
                 
-                % 提取需要用到的部分
+                % Extract the required part
                 movimg_matrix = maskMatrixWithPolygon(movimg_matrix,moving_img_boundary);
                 
-%                 写入预处理但是未变换的数据
+%                 Write the preprocessed but untransformed data
                 writematrix(movimg_matrix, before_file_save_path,'Sheet',sheet_name);
  
-                % 获取参考
+                % Get reference
                 movingRefObj = imref2d(size(movimg_matrix));
                 fixedRefObj = imref2d(size(fixed_matrix));
                 
-                % 应用已有的参数配准,并显示配准结果
+                % Apply the existing registration parameters and display the registration result
                 tform = R1.Transformation;
                 displace_fild = R1.DisplacementField;
                 registered_1 = imwarp(movimg_matrix, movingRefObj, tform, 'OutputView', fixedRefObj, 'SmoothEdges', true,'interp','nearest');
@@ -108,16 +108,9 @@ for m=1:length(mets_name)
                 % set(gca,'position', [0 0 1 1]);
                 title(sheet_name);
                 
-                
-                %保存配准后的结果
+                % Save the registered results
                 writematrix(final_matrix, file_save_path,'Sheet',sheet_name);
             end
-            
-            
         end
     end
 end
-
-
-
-

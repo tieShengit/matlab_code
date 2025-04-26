@@ -1,19 +1,26 @@
 function maskedMatrix = maskMatrixWithPolygon(matrix, coords)
-    % matrix: 输入的矩阵
-    % coords: 封闭轮廓的坐标点，2行N列矩阵，第一行是x坐标，第二行是y坐标
+% maskMatrixWithPolygon - Mask a matrix by setting values outside a polygon to zero.
+%
+% Inputs:
+%   matrix - Input 2D matrix.
+%   coords - 2xN array of polygon coordinates, where:
+%            coords(1,:) are x-coordinates,
+%            coords(2,:) are y-coordinates.
+%
+% Outputs:
+%   maskedMatrix - Matrix where values outside the polygon are set to zero.
 
-    % 获取矩阵的大小
-    [rows, cols] = size(matrix);
-    
-    % 生成网格点
-    [X, Y] = meshgrid(1:cols, 1:rows);
-    
-    % 检查网格点是否在多边形内
-    inPolygon = inpolygon(X, Y, coords(1,:), coords(2,:));
-    
-    % 创建掩膜矩阵
-    maskedMatrix = matrix;
-    % 将多边形外的数据置为0
-    maskedMatrix(~inPolygon) = 0; 
-    
+% Get the size of the input matrix
+[rows, cols] = size(matrix);
+
+% Generate coordinate grid
+[X, Y] = meshgrid(1:cols, 1:rows);
+
+% Determine points inside the polygon
+inPolygon = inpolygon(X, Y, coords(1,:), coords(2,:));
+
+% Create the masked matrix
+maskedMatrix = matrix;
+maskedMatrix(~inPolygon) = 0; % Set values outside the polygon to zero
+
 end
