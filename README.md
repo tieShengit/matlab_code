@@ -1,12 +1,11 @@
- 
-这个项目是一个图像配准的MATLAB代码仓库。它提供了一些用于图像配准的MATLAB函数,包括图像转换、数值计算、空间拟合等功能。
+This project is a MATLAB code repository for image registration. It provides several MATLAB functions for image registration, including image transformation, numerical computation, spatial fitting, and other functionalities.
 
-### 主要功能点
-1. 图像转换和数值计算
-2. 基于关键点的图像配准
-3. 基于几何变换的图像配准
-4. 空间拟合和参数计算
+Key Features:
+Image transformation and numerical computation
+Keypoint-based image registration
+Geometric transformation-based image registration
+Spatial fitting and parameter computation
 
-### 技术栈
-- MATLAB编程语言
-- 图像处理和分析算法
+Technology Stack:
+MATLAB programming language
+Image processing and analysis algorithms
